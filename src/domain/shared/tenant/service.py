@@ -59,13 +59,13 @@ async def create_schema(schema_name: str):
     engine = sessionmanager._engine
     async with sessionmanager._engine.begin() as con:
         has_schema = await con.run_sync(engine.dialect.has_schema, schema_name)
-        await migrate_tables_for_schema(schema_name)
         if not has_schema:
             # await con.run_sync(sessionmanager._engine.dialect)
             schema = CreateSchema(schema_name)
 
-            # await con.execute(schema)
-            # await con.commit()
+            await con.execute(schema)
+            await con.commit()
+            await migrate_tables_for_schema(schema_name)
 
 
 async def migrate_tables_for_schema(schema_name: str):
@@ -89,6 +89,9 @@ async def migrate_tables_for_schema(schema_name: str):
                     for table in metadata.sorted_tables:
                         if table.name in excluded_tables:
                             continue
-
+                        if await con.run_sync(engine.dialect.has_table, table.name, schema_name):
+                            print(f'Table {table.name} already exists in {
+                                  schema_name}')
+                            continue
                         await con.execute(CreateTable(table))
                         await con.commit()
