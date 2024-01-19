@@ -1,12 +1,15 @@
 from typing import List, Sequence
 
 from fastapi import HTTPException
-from sqlalchemy import MetaData, select
+from sqlalchemy import MetaData, Table, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.automap import AutomapBase
-from sqlalchemy.schema import CreateSchema, CreateTable
+from sqlalchemy.schema import CreateColumn, CreateSchema, CreateTable
 
 from src.config.database.connection import sessionmanager
+from src.domain.models import Base
+from src.domain.shared import SharedBase
+from src.migrations import BaseMigration
 
 from .model import Tenant
 from .schemas import TenantIn
@@ -65,7 +68,69 @@ async def create_schema(schema_name: str):
 
             await con.execute(schema)
             await con.commit()
-            await migrate_tables_for_schema(schema_name)
+        await migrate_tables_for_schema(schema_name)
+
+
+async def create_shared_tables():
+    # criar as tabelas publicas
+    orm_tables = SharedBase.metadata.sorted_tables
+
+    if sessionmanager._engine is None:
+        raise
+    engine = sessionmanager._engine
+
+    async with engine.execution_options(schema_translate_map={None: 'shared'}).connect() as con:
+        for table in orm_tables:
+            has_table = await con.run_sync(engine.dialect.has_table, table.name, 'shared')
+            if has_table:
+                print(f'Table {table.name} already exists in public')
+                continue
+            await con.execute(CreateTable(table))
+            await con.commit()
+
+
+async def create_public_tables():
+    # criar as tabelas publicas
+    orm_tables = Base.metadata.sorted_tables
+
+    if sessionmanager._engine is None:
+        raise
+    engine = sessionmanager._engine
+
+    async with engine.execution_options(schema_translate_map={None: 'public'}).connect() as con:
+        for table in orm_tables:
+            has_table = await con.run_sync(engine.dialect.has_table, table.name, 'public')
+            if has_table:
+                print(f'Table {table.name} already exists in public')
+                await verify_table_columns(table)
+                continue
+            else:
+                await con.execute(CreateTable(table))
+                await con.commit()
+
+
+async def verify_table_columns(table: Table, schema_name: str = 'public'):
+
+    if sessionmanager._engine is None:
+        raise
+    engine = sessionmanager._engine
+
+    async with engine.execution_options(schema_translate_map={None: schema_name}).connect() as con:
+
+        column_list = await con.run_sync(engine.dialect.get_columns, table.name, schema_name)
+
+        for column in table.columns:
+            for col in column_list:
+                if column.name == col['name']:
+                    break
+            else:
+                print(f'Column {column.name} not found in table {
+                    table.name}')
+
+                create_column = CreateColumn(column)
+                compiled = create_column.compile(dialect=engine.dialect)
+                await con.execute(text(f"ALTER TABLE {schema_name}.{table.name} ADD COLUMN {compiled.string}"))
+                await con.commit()
 
 
 async def migrate_tables_for_schema(schema_name: str):
@@ -73,7 +138,7 @@ async def migrate_tables_for_schema(schema_name: str):
         raise
     engine = sessionmanager._engine
     async with sessionmanager._engine.begin() as con:
-        table_list = await con.run_sync(engine.dialect.get_table_names)
+        # table_list = await con.run_sync(engine.dialect.get_table_names)
 
         metadata = MetaData()
         await con.run_sync(metadata.reflect,)
@@ -92,6 +157,8 @@ async def migrate_tables_for_schema(schema_name: str):
                         if await con.run_sync(engine.dialect.has_table, table.name, schema_name):
                             print(f'Table {table.name} already exists in {
                                   schema_name}')
+                            await verify_table_columns(table, schema_name)
+
                             continue
                         await con.execute(CreateTable(table))
                         await con.commit()

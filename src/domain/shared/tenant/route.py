@@ -22,9 +22,33 @@ async def get_tenants(session: SessionDB):
     return tenants
 
 
-@router.post("/{tenant_id}/create_schema")
+@router.get("/{tenant_id}")
+async def get_tenant_by_id(tenant_id: int, session: SessionDB):
+    tenant = await service.get_tenant_by_id(tenant_id, session)
+
+    if tenant is None:
+        raise HTTPException(404, 'Tenant not found')
+
+    return tenant
+
+
+@router.post("/{tenant_id}/create_schema",
+             response_model=None,
+             status_code=204)
 async def create_schema(tenant_id: int, session: SessionDB):
     tenant = await service.get_tenant_by_id(tenant_id, session)
     if tenant is None:
         raise HTTPException(404, 'Tenant not found')
     await service.create_schema(tenant.schema_name)
+    return None
+
+
+@router.post("/{tenant_id}/migrate",)
+async def migrate(tenant_id: int, session: SessionDB):
+    tentant = await service.get_tenant_by_id(tenant_id, session)
+
+    if tentant is None:
+        raise HTTPException(404, 'Tenant not found')
+
+    await service.migrate_tables_for_schema(tentant.schema_name)
+    return None
