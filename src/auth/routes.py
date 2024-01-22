@@ -8,4 +8,4 @@ router = APIRouter(tags=['Auth'])
 @router.post("/")
 async def login(body: LoginSchema):
     # TODO implement login
-    return {"email": body.email, "token": "supertoken"}
+    return {"email": body.email, "token": "supertoken", "permissions": ["admin"]}
