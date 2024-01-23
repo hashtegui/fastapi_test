@@ -20,4 +20,4 @@ async def login(body: LoginSchema, session: SessionDB):
         raise HTTPException(401, 'Invalid credentials')
 
     token = service.create_access_token(data={"email": body.email})
-    return {"email": user.email, "token": token, "permissions": ["admin"]}
+    return {"email": user.email, "token": token, "permissions": ["user"]}

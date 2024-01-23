@@ -17,3 +17,4 @@ class UserIn(BaseModel):
     name: str
     email: str
     password: str = Field(min_length=4)
+    company_id: int
