@@ -1,7 +1,12 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.config.database.base import SharedBase
+
+if TYPE_CHECKING:
+    from src.domain.shared.users.model import Company
 
 
 class Tenant(SharedBase):
@@ -10,6 +15,8 @@ class Tenant(SharedBase):
     name: Mapped[str] = mapped_column(String(60), nullable=True)
     schema_name: Mapped[str] = mapped_column(
         String(60), nullable=False, unique=True)
+
+    company: Mapped["Company"] = relationship(back_populates="tenant")
 
     def __repr__(self) -> str:
         return f"<Tenant(id={self.id}, name={self.name},\

@@ -1,9 +1,13 @@
 import uuid
+from typing import TYPE_CHECKING
 
-from sqlalchemy import UUID, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import UUID, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.domain.shared import SharedBase
+
+if TYPE_CHECKING:
+    from src.domain.shared.company.model import Company
 
 
 class User(SharedBase):
@@ -14,3 +18,8 @@ class User(SharedBase):
     name: Mapped[str] = mapped_column(String(60))
     email: Mapped[str] = mapped_column(String(150), unique=True)
     password: Mapped[str] = mapped_column(String(150))
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey("company.id"))
+
+    company: Mapped["Company"] = relationship(
+        back_populates="user",)

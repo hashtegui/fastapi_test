@@ -4,7 +4,8 @@ from fastapi import HTTPException
 from sqlalchemy import MetaData, Table, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.automap import AutomapBase
-from sqlalchemy.schema import CreateColumn, CreateSchema, CreateTable
+from sqlalchemy.schema import (AddConstraint, CreateColumn, CreateSchema,
+                               CreateTable)
 
 from src.config.database.connection import sessionmanager
 from src.domain.models import Base
@@ -83,7 +84,8 @@ async def create_shared_tables():
         for table in orm_tables:
             has_table = await con.run_sync(engine.dialect.has_table, table.name, 'shared')
             if has_table:
-                print(f'Table {table.name} already exists in public')
+                print(f'Table {table.name} already exists in shared')
+                await verify_table_columns(table, 'shared')
                 continue
             await con.execute(CreateTable(table))
             await con.commit()
@@ -102,7 +104,7 @@ async def create_public_tables():
             has_table = await con.run_sync(engine.dialect.has_table, table.name, 'public')
             if has_table:
                 print(f'Table {table.name} already exists in public')
-                await verify_table_columns(table)
+                await verify_table_columns(table,)
                 continue
             else:
                 await con.execute(CreateTable(table))
@@ -120,6 +122,7 @@ async def verify_table_columns(table: Table, schema_name: str = 'public'):
         column_list = await con.run_sync(engine.dialect.get_columns, table.name, schema_name)
 
         for column in table.columns:
+
             for col in column_list:
                 if column.name == col['name']:
                     break
@@ -130,6 +133,8 @@ async def verify_table_columns(table: Table, schema_name: str = 'public'):
                 create_column = CreateColumn(column)
                 compiled = create_column.compile(dialect=engine.dialect)
                 await con.execute(text(f"ALTER TABLE {schema_name}.{table.name} ADD COLUMN {compiled.string}"))
+                for fk in column.foreign_keys:
+                    await con.execute(AddConstraint(fk.constraint))
                 await con.commit()
 
 

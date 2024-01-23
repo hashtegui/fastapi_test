@@ -13,7 +13,15 @@ class DataBaseSettings(BaseSettings):
 class Settings(BaseSettings):
     shared_schema: str = 'public'
     tenant_schema: str = 'tenant'
+    secret: str = 'secret'
 
 
 def get_database_settings() -> DataBaseSettings:
     return DataBaseSettings()
+
+
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

@@ -51,4 +51,5 @@ async def migrate(tenant_id: int, session: SessionDB):
         raise HTTPException(404, 'Tenant not found')
 
     await service.migrate_tables_for_schema(tentant.schema_name)
+
     return None

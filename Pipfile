@@ -13,8 +13,11 @@ pydantic-settings = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 psycopg = {extras = ["binary"], version = "*"}
 alembic = "*"
+python-jose = "*"
+bcrypt = "*"
 
 [dev-packages]
+types-python-jose = "*"
 
 [requires]
 python_version = "3.12"
