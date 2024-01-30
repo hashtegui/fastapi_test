@@ -16,7 +16,10 @@ class Tenant(SharedBase):
     schema_name: Mapped[str] = mapped_column(
         String(60), nullable=False, unique=True)
 
-    company: Mapped["Company"] = relationship(back_populates="tenant")
+    company: Mapped["Company"] = relationship(
+        back_populates="tenant", lazy='joined')
+
+    __table_args__ = ({"schema": "shared"})
 
     def __repr__(self) -> str:
         return f"<Tenant(id={self.id}, name={self.name},\

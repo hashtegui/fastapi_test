@@ -10,11 +10,12 @@ pytest = "*"
 httpx = "*"
 asyncpg = "*"
 pydantic-settings = "*"
-uvicorn = {extras = ["standard"], version = "*"}
+uvicorn = "*"
 psycopg = {extras = ["binary"], version = "*"}
 alembic = "*"
 python-jose = "*"
 bcrypt = "*"
+python-multipart = "*"
 
 [dev-packages]
 types-python-jose = "*"

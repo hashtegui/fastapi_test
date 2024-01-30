@@ -22,4 +22,8 @@ class User(SharedBase):
         ForeignKey("company.id"))
 
     company: Mapped["Company"] = relationship(
-        back_populates="user",)
+        back_populates="user", lazy='joined')
+
+    def to_funcionario(self):
+        from src.domain.models.funcionario.model import Funcionario
+        return Funcionario(nome=self.name, email=self.email, user_id=self.id)

@@ -1,39 +1,47 @@
 
 
-import bcrypt
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
 
+from fastapi import Depends
+from sqlalchemy import select
+
+from src.auth.service import AuthService
+from src.config.database.connection import SessionDB, sessionmanager
 from src.domain.shared.users.model import User
 from src.domain.shared.users.schemas import UserIn
 
 
-async def create_user(user_in: UserIn, session: AsyncSession):
-    user = User(**user_in.model_dump())
-    user.password = await hash_password(user_in.password)
-    session.add(user)
-    await session.commit()
-    await session.refresh(user)
-    return user
+class UserService:
 
+    def __init__(self,
+                 session: SessionDB,
+                 auth_service: Annotated[AuthService, Depends()]) -> None:
+        self.auth_service = auth_service
+        self.session = session
 
-async def get_users(session: AsyncSession, limit: int = 100, offset: int = 0):
-    result = await session.scalars(select(User).limit(limit).offset(offset))
-    return result.all()
+    async def create_user(self, user_in: UserIn):
+        user = User(**user_in.model_dump())
+        user.password = await self.auth_service.hash_password(user_in.password)
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
 
+        schema_name = user.company.tenant.schema_name
 
-async def get_user_by_email(email: str, session: AsyncSession):
-    result = await session.scalars(select(User).where(User.email == email))
-    return result.first()
+        await self.session.close()
 
+        async with sessionmanager.session(schema_name) as session:
+            funcionario = user.to_funcionario()
+            session.add(funcionario)
+            await session.commit()
+            await session.close()
 
-async def hash_password(password: str):
-    hashed_password = bcrypt.hashpw(
-        password.encode('utf-8'), bcrypt.gensalt(rounds=10))
-    return hashed_password.decode('utf-8')
+        return user
 
+    async def get_users(self,  limit: int = 100, offset: int = 0):
+        result = await self.session.scalars(select(User).limit(limit).offset(offset))
+        return result.all()
 
-async def verify_password(plain_password: str, hashed_password: str):
-    return bcrypt.checkpw(
-        plain_password.encode('utf-8'),
-        hashed_password.encode('utf-8'))
+    async def get_user_by_email(self, email: str):
+        result = await self.session.scalars(select(User).where(User.email == email))
+        return result.first()

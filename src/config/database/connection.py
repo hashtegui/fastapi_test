@@ -1,5 +1,5 @@
 import contextlib
-from typing import Annotated, Any, AsyncIterator
+from typing import Annotated, Any, AsyncIterator, Optional
 
 from fastapi import Depends
 from sqlalchemy import create_engine
@@ -51,9 +51,21 @@ class DatabaseSessionManager:
                 raise
 
     @contextlib.asynccontextmanager
-    async def session(self) -> AsyncIterator[AsyncSession]:
+    async def session(
+            self,
+            schema: Optional[str] = None) -> AsyncIterator[AsyncSession]:
         if self._sessionmaker is None:
             raise Exception("DatabaseSessionManager is not initialized")
+
+        if self._engine is None:
+            raise
+
+        if schema:
+            conn = self._engine.execution_options(
+                schema_translate_map={'public': schema})
+
+            self._sessionmaker = async_sessionmaker(
+                autocommit=False, bind=conn)
 
         session = self._sessionmaker()
         try:

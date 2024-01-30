@@ -18,4 +18,5 @@ class Company (SharedBase):
     tenant_id: Mapped[int] = mapped_column(ForeignKey("tenant.id"))
 
     user: Mapped["User"] = relationship(back_populates="company")
-    tenant: Mapped["Tenant"] = relationship(back_populates="company")
+    tenant: Mapped["Tenant"] = relationship(
+        back_populates="company", lazy='joined')

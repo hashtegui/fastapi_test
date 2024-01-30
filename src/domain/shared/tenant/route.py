@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from src.auth.service import get_current_user
 from src.config.database.connection import SessionDB
 from src.domain.shared.tenant.schemas import TenantIn, TenantOut
 
@@ -15,8 +16,8 @@ async def create_tenant(tenant_in: TenantIn, session: SessionDB):
     return tenant
 
 
-@router.get("/")
-async def get_tenants(session: SessionDB):
+@router.get("/", dependencies=[Depends(get_current_user)])
+async def get_tenants(session: SessionDB,):
     tenants = await service.get_all_tenants(session)
 
     return tenants
