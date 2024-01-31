@@ -10,6 +10,18 @@ from src.config.settings import settings
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth")
 
 
+def create_access_token(self, *,
+                        data: dict[str, Any],
+                        expires_delta: int = 60):
+    to_encode = data.copy()
+
+    expire = datetime.utcnow() + timedelta(minutes=expires_delta)
+    to_encode.update({"exp": expire})
+
+    encoded_jwt = jwt.encode(to_encode, settings.secret, algorithm="HS256")
+    return encoded_jwt
+
+
 class AuthService:
 
     async def hash_password(self, password: str):

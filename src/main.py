@@ -3,9 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.config.database.connection import SessionDB, init_db, sessionmanager
+from src.config.database.connection import sessionmanager
 from src.config.routes import router
-from src.domain.shared.tenant import service as tenant_service
 
 
 @asynccontextmanager
