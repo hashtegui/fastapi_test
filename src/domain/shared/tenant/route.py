@@ -2,10 +2,9 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.auth.context import Context, get_current_funcionario
+from src.auth.context import Context
 from src.config.database.connection import SessionDB
 from src.domain.shared.tenant.schemas import TenantIn, TenantOut
-from src.domain.shared.users.model import User
 
 from . import service
 

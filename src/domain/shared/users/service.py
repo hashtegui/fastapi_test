@@ -15,7 +15,8 @@ class UserService:
 
     def __init__(self,
                  session: SessionDB,
-                 auth_service: Annotated[AuthService, Depends()]) -> None:
+                 auth_service: Annotated[AuthService, Depends()],
+                 ) -> None:
         self.auth_service = auth_service
         self.session = session
 
