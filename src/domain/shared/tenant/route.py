@@ -1,8 +1,11 @@
+from typing import Annotated, List
+
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.auth.service import get_current_user
+from src.auth.context import Context, get_current_funcionario
 from src.config.database.connection import SessionDB
 from src.domain.shared.tenant.schemas import TenantIn, TenantOut
+from src.domain.shared.users.model import User
 
 from . import service
 
@@ -16,8 +19,10 @@ async def create_tenant(tenant_in: TenantIn, session: SessionDB):
     return tenant
 
 
-@router.get("/", dependencies=[Depends(get_current_user)])
-async def get_tenants(session: SessionDB,):
+@router.get("/", response_model=List[TenantOut])
+async def get_tenants(session: SessionDB,
+                      context: Annotated[Context, Depends()]):
+    print(context.user)
     tenants = await service.get_all_tenants(session)
 
     return tenants

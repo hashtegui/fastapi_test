@@ -7,6 +7,8 @@ from src.domain.models import Base
 class Pedido(Base):
     __tablename__ = 'pedidos'
 
+    __table_args__ = ({"schema": "public"})
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(String(50))
     quantidade: Mapped[int] = mapped_column(Integer)

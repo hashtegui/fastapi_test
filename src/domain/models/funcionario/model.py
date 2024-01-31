@@ -10,6 +10,7 @@ from src.domain.models import Base
 class Funcionario(Base):
 
     __tablename__ = "funcionarios"
+    __table_args__ = ({"schema": "public"})
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(String(60), nullable=True)

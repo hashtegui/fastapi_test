@@ -2,7 +2,7 @@ import contextlib
 from typing import Annotated, Any, AsyncIterator, Optional
 
 from fastapi import Depends
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, pool
 from sqlalchemy.ext.asyncio import (AsyncConnection, AsyncSession,
                                     async_sessionmaker, create_async_engine)
 
@@ -14,7 +14,7 @@ settings = get_database_settings()
 engine_url = f"postgresql+asyncpg://{settings.user}:{
     settings.password}@{settings.host}:{settings.port}/{settings.name}"
 
-engine = create_async_engine(engine_url)
+engine = create_async_engine(engine_url,)
 engine_sync = create_engine(f"postgresql+psycopg://{settings.user}:{
                             settings.password}@{settings.host}:{settings.port}/{settings.name}")
 
@@ -66,6 +66,10 @@ class DatabaseSessionManager:
 
             self._sessionmaker = async_sessionmaker(
                 autocommit=False, bind=conn)
+        else:
+            self._sessionmaker = async_sessionmaker(
+                autocommit=False, bind=self._engine
+            )
 
         session = self._sessionmaker()
         try:
@@ -81,8 +85,8 @@ sessionmanager = DatabaseSessionManager(
     engine_url, {"echo": True})
 
 
-async def get_db():
-    async with sessionmanager.session() as session:
+async def get_db(schema: Optional[str] = None):
+    async with sessionmanager.session(schema) as session:
         try:
             yield session
         except Exception:

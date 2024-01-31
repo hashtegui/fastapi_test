@@ -1,4 +1,3 @@
-from typing import List, Sequence
 
 from fastapi import HTTPException
 from sqlalchemy import MetaData, Table, select, text
@@ -10,7 +9,6 @@ from sqlalchemy.schema import (AddConstraint, CreateColumn, CreateSchema,
 from src.config.database.connection import sessionmanager
 from src.domain.models import Base
 from src.domain.shared import SharedBase
-from src.migrations import BaseMigration
 
 from .model import Tenant
 from .schemas import TenantIn
@@ -45,10 +43,6 @@ async def create_tenant(tenant: TenantIn, session: AsyncSession):
     await session.commit()
     await session.refresh(tenant_db)
 
-    # criando schema
-
-    # await create_schema(tenant_db.schema_name)
-
     return tenant_db
 
 
@@ -80,7 +74,7 @@ async def create_shared_tables():
         raise
     engine = sessionmanager._engine
 
-    async with engine.execution_options(schema_translate_map={None: 'shared'}).connect() as con:
+    async with engine.execution_options(schema_translate_map={'shared': 'shared'}).connect() as con:
         for table in orm_tables:
             has_table = await con.run_sync(engine.dialect.has_table, table.name, 'shared')
             if has_table:
@@ -99,7 +93,7 @@ async def create_public_tables():
         raise
     engine = sessionmanager._engine
 
-    async with engine.execution_options(schema_translate_map={None: 'public'}).connect() as con:
+    async with engine.execution_options(schema_translate_map={'public': 'public'}).connect() as con:
         for table in orm_tables:
             has_table = await con.run_sync(engine.dialect.has_table, table.name, 'public')
             if has_table:
@@ -146,24 +140,29 @@ async def migrate_tables_for_schema(schema_name: str):
         # table_list = await con.run_sync(engine.dialect.get_table_names)
 
         metadata = MetaData()
-        await con.run_sync(metadata.reflect,)
+        new_meta = MetaData(schema=schema_name)
+        await con.run_sync(metadata.reflect, )
 
         excluded_tables = ['migrations', 'alembic_version']
 
         async with sessionmanager.session() as session:
             tenants = await get_all_tenants(session)
 
-        async with engine.execution_options(schema_translate_map={None: schema_name}).connect() as con:
+        async with engine.execution_options(schema_translate_map={'public': schema_name}).connect() as connection:
             for tenant in tenants:
                 if tenant.schema_name == schema_name:
                     for table in metadata.sorted_tables:
                         if table.name in excluded_tables:
                             continue
-                        if await con.run_sync(engine.dialect.has_table, table.name, schema_name):
+                        if await connection.run_sync(engine.dialect.has_table, table.name, schema_name):
                             print(f'Table {table.name} already exists in {
                                   schema_name}')
                             await verify_table_columns(table, schema_name)
 
                             continue
-                        await con.execute(CreateTable(table))
-                        await con.commit()
+
+                        table_copy = table.to_metadata(new_meta)
+                        await connection.execute(CreateTable(table_copy))
+                        # print(CreateTable(table).compile(
+                        #     connection.sync_connection))
+                        await connection.commit()

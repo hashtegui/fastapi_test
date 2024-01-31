@@ -32,7 +32,7 @@ app.add_middleware(
 
 
 @app.get("/ping")
-async def read_root(session: SessionDB):
+async def read_root():
     await tenant_service.create_shared_tables()
     await tenant_service.create_public_tables()
     return {"ping": "pong"}

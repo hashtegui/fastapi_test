@@ -2,18 +2,12 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import bcrypt
-from fastapi import Depends
 from fastapi.security.oauth2 import OAuth2PasswordBearer
 from jose import jwt
 
 from src.config.settings import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth")
-
-
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    print(token)
-    pass
 
 
 class AuthService:
