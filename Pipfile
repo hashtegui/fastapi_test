@@ -16,6 +16,8 @@ alembic = "*"
 python-jose = "*"
 bcrypt = "*"
 python-multipart = "*"
+anyio = "*"
+pytest-asyncio = "*"
 
 [dev-packages]
 types-python-jose = "*"

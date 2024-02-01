@@ -21,6 +21,13 @@
       "args": ["src.main:app", "--reload"],
       "jinja": true,
       "justMyCode": true
+    },
+    {
+      "name": "Python: Pytest",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "justMyCode": true
     }
   ]
 }
