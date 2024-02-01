@@ -82,7 +82,7 @@ class DatabaseSessionManager:
 
 
 sessionmanager = DatabaseSessionManager(
-    engine_url, {"echo": True})
+    engine_url, {"echo": False})
 
 
 async def get_db(schema: Optional[str] = None):
