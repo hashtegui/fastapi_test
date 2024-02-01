@@ -7,7 +7,7 @@ from jose import jwt
 
 from src.config.settings import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/")
 
 
 def create_access_token(self, *,
