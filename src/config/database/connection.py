@@ -15,8 +15,8 @@ engine_url = f"postgresql+asyncpg://{settings.user}:{
     settings.password}@{settings.host}:{settings.port}/{settings.name}"
 
 engine = create_async_engine(engine_url,)
-engine_sync = create_engine(f"postgresql+psycopg://{settings.user}:{
-                            settings.password}@{settings.host}:{settings.port}/{settings.name}")
+engine_sync = create_engine(f"""postgresql+psycopg://{settings.user}:{
+                            settings.password}@{settings.host}:{settings.port}/{settings.name}""")
 
 
 async def init_db():
