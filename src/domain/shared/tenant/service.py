@@ -78,7 +78,7 @@ async def create_shared_tables():
         for table in orm_tables:
             has_table = await con.run_sync(engine.dialect.has_table, table.name, 'shared')
             if has_table:
-                print(f'Table {table.name} already exists in shared')
+                print(f"""Table {table.name} already exists in shared""")
                 await verify_table_columns(table, 'shared')
                 continue
             await con.execute(CreateTable(table))
@@ -97,7 +97,7 @@ async def create_public_tables():
         for table in orm_tables:
             has_table = await con.run_sync(engine.dialect.has_table, table.name, 'public')
             if has_table:
-                print(f'Table {table.name} already exists in public')
+                print(f"""Table {table.name} already exists in public""")
                 await verify_table_columns(table,)
                 continue
             else:
@@ -121,12 +121,12 @@ async def verify_table_columns(table: Table, schema_name: str = 'public'):
                 if column.name == col['name']:
                     break
             else:
-                print(f'Column {column.name} not found in table {
-                    table.name}')
+                print(f"""Column {column.name} not found in table {
+                    table.name}""")
 
                 create_column = CreateColumn(column)
                 compiled = create_column.compile(dialect=engine.dialect)
-                await con.execute(text(f"ALTER TABLE {schema_name}.{table.name} ADD COLUMN {compiled.string}"))
+                await con.execute(text(f"""ALTER TABLE {schema_name}.{table.name} ADD COLUMN {compiled.string}"""))
                 for fk in column.foreign_keys:
                     await con.execute(AddConstraint(fk.constraint))
                 await con.commit()
@@ -155,8 +155,8 @@ async def migrate_tables_for_schema(schema_name: str):
                         if table.name in excluded_tables:
                             continue
                         if await connection.run_sync(engine.dialect.has_table, table.name, schema_name):
-                            print(f'Table {table.name} already exists in {
-                                  schema_name}')
+                            print(f"""Table {table.name} already exists in {
+                                  schema_name}""")
                             await verify_table_columns(table, schema_name)
 
                             continue

@@ -22,5 +22,5 @@ class Tenant(SharedBase):
     __table_args__ = ({"schema": "shared"})
 
     def __repr__(self) -> str:
-        return f"<Tenant(id={self.id}, name={self.name},\
-            schema_name={self.schema_name})>"
+        return f"""<Tenant(id={self.id}, name={self.name},\
+            schema_name={self.schema_name})>"""
