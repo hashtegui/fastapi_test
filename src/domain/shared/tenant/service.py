@@ -1,6 +1,8 @@
 
+import alembic
+from alembic.migration import MigrationContext
 from fastapi import HTTPException
-from sqlalchemy import MetaData, Table, select, text
+from sqlalchemy import Connection, MetaData, Table, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.automap import AutomapBase
 from sqlalchemy.schema import (AddConstraint, CreateColumn, CreateSchema,
@@ -119,6 +121,7 @@ async def verify_table_columns(table: Table, schema_name: str = 'public'):
 
             for col in column_list:
                 if column.name == col['name']:
+
                     break
             else:
                 print(f"""Column {column.name} not found in table {
@@ -137,6 +140,7 @@ async def migrate_tables_for_schema(schema_name: str):
         raise
     engine = sessionmanager._engine
     async with sessionmanager._engine.begin() as con:
+
         # table_list = await con.run_sync(engine.dialect.get_table_names)
 
         metadata = MetaData()
@@ -145,13 +149,15 @@ async def migrate_tables_for_schema(schema_name: str):
 
         excluded_tables = ['migrations', 'alembic_version']
 
+        orm_tables = Base.metadata.sorted_tables
+
         async with sessionmanager.session() as session:
             tenants = await get_all_tenants(session)
 
         async with engine.execution_options(schema_translate_map={'public': schema_name}).connect() as connection:
             for tenant in tenants:
                 if tenant.schema_name == schema_name:
-                    for table in metadata.sorted_tables:
+                    for table in orm_tables:
                         if table.name in excluded_tables:
                             continue
                         if await connection.run_sync(engine.dialect.has_table, table.name, schema_name):

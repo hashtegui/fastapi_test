@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.config.database.connection import sessionmanager
 from src.config.routes import router
+from src.domain.shared.tenant import service as tenant_service
 
 
 @asynccontextmanager
@@ -32,6 +33,6 @@ app.add_middleware(
 
 @app.get("/ping")
 async def read_root():
-    # await tenant_service.create_shared_tables()
-    # await tenant_service.create_public_tables()
+    await tenant_service.create_shared_tables()
+    await tenant_service.create_public_tables()
     return {"ping": "pong"}
